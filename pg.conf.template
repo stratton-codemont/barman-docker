@@ -1,8 +1,9 @@
 [${POSTGRES_SERVER}]
-active = true
 description =  "PostgreSQL Database (Streaming-Only)"
-conninfo = host=${POSTGRES_SERVER} user=${BARMAN_SUPERUSER} dbname=${BARMAN_SUPERUSER_DATABASE} port=${POSTGRES_PORT}
-streaming_conninfo = host=${POSTGRES_SERVER} user=${BARMAN_REPLICATION_USER} port=${POSTGRES_PORT}
-backup_method = ${BARMAN_DB_BACKUP_METHOD}
 streaming_archiver = on
+active = true
+conninfo = host=${POSTGRES_SERVER} user=${BARMAN_SUPERUSER} dbname=${POSTGRES_DB} port=${POSTGRES_PORT}
+streaming_conninfo = host=${POSTGRES_SERVER} user=${BARMAN_REPLICATION_USER} dbname=${POSTGRES_DB} port=${POSTGRES_PORT}
+backup_method = ${BARMAN_DB_BACKUP_METHOD}
 slot_name = ${BARMAN_DB_SLOT_NAME}
+create_slot = ${BARMAN_DB_CREATE_SLOT}

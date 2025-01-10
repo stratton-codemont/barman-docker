@@ -48,7 +48,7 @@ RUN bash -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ bullseye-pgdg ma
 
 # Set up some defaults for file/directory locations used in entrypoint.sh.
 ENV \
-	BARMAN_VERSION=3.4.1 \
+	BARMAN_VERSION=3.12.1 \
 	BARMAN_CRON_SRC=/private/cron.d \
 	BARMAN_DATA_DIR=/var/lib/barman \
 	BARMAN_LOG_DIR=/var/log/barman \
@@ -60,7 +60,7 @@ ENV \
 	POSTGRES_PORT=5432 \
 	BARMAN_SUPERUSER=postgres \
 	BARMAN_SUPERUSER_PASSWORD=postgres \
-	BARMAN_SUPERUSER_DATABASE=postgres \
+	POSTGRES_DB=postgres \
 	BARMAN_REPLICATION_USER=standby \
 	BARMAN_REPLICATION_PASSWORD=standby \
 	BARMAN_DB_SLOT_NAME=barman \
