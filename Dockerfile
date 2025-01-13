@@ -1,11 +1,13 @@
 FROM debian:bullseye
 
 RUN apt-get update \
-	&& apt-get install -y --no-install-recommends ca-certificates wget gnupg2 gosu tini\
-	&& rm -rf /var/lib/apt/lists/* \
-	# verify that the binary works
-	&& gosu nobody true
+    && apt-get install -y --no-install-recommends ca-certificates wget gnupg2 gosu tini\
+    && rm -rf /var/lib/apt/lists/* \
+    # verify that the binary works
+    && gosu nobody true
 
+RUN apt-get update && apt-get install -y postgresql-common \
+    && /usr/share/postgresql-common/pgdg/apt.postgresql.org.sh -y 
 # Install postgres clients so that barman can use the appropriate version when
 # using pg_basebackup.
 # Install some other requirements as well.
@@ -17,58 +19,52 @@ RUN apt-get update \
 #   python: Needed to run barman
 #   rsync: Needed to rsync basebackups from the database servers
 #   gettext-base: envsubst
-RUN bash -c 'echo "deb http://apt.postgresql.org/pub/repos/apt/ bullseye-pgdg main" >> /etc/apt/sources.list.d/pgdg.list' \
-	&& (wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | apt-key add -) \
-	&& apt-get update \
-	&& apt-get install -y --no-install-recommends \
-	cron \
-	gcc \
-	libpq-dev \
-	libpython3-dev \
-	openssh-client \
-	postgresql-client-9.5 \
-	postgresql-client-9.6 \
-	postgresql-client-10 \
-	postgresql-client-11 \
-	postgresql-client-12 \
-	postgresql-client-13 \
-	postgresql-client-14 \
-	postgresql-client-15 \
-	postgresql-client-16 \
-	postgresql-client-17 \
-	python3 \
-	python3-distutils \
-	rsync \
-	gettext-base \
-	procps \
-	&& rm -rf /var/lib/apt/lists/* \
-	&& rm -f /etc/crontab /etc/cron.*/* \
-	&& sed -i 's/\(.*pam_loginuid.so\)/#\1/' /etc/pam.d/cron \
-	&& mkdir -p /etc/barman/barman.d
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    cron \
+    gcc \
+    libpq-dev \
+    libpython3-dev \
+    openssh-client \
+    postgresql-17 \
+    python3 \
+    python3-distutils \
+    rsync \
+    gettext-base \
+    procps \
+    && rm -rf /var/lib/apt/lists/* \
+    && rm -f /etc/crontab /etc/cron.*/* \
+    && sed -i 's/\(.*pam_loginuid.so\)/#\1/' /etc/pam.d/cron \
+    && mkdir -p /etc/barman/barman.d
+
+# add postgresql-17 binaries to PATH
+ENV PATH /usr/lib/postgresql/17/bin:$PATH
+
+# pg_combinebackup is installed
+RUN pg_basebackup --version && pg_combinebackup --version
 
 # Set up some defaults for file/directory locations used in entrypoint.sh.
 ENV \
-	BARMAN_VERSION=3.12.1 \
-	BARMAN_CRON_SRC=/private/cron.d \
-	BARMAN_DATA_DIR=/var/lib/barman \
-	BARMAN_LOG_DIR=/var/log/barman \
-	BARMAN_SSH_KEY_DIR=/private/ssh \
-	BARMAN_CRON_SCHEDULE="* * * * *" \
-	BARMAN_BACKUP_SCHEDULE="0 4 * * *" \
-	BARMAN_LOG_LEVEL=INFO \
-	POSTGRES_SERVER=pg \
-	POSTGRES_PORT=5432 \
-	BARMAN_SUPERUSER=postgres \
-	BARMAN_SUPERUSER_PASSWORD=postgres \
-	POSTGRES_DB=postgres \
-	BARMAN_REPLICATION_USER=standby \
-	BARMAN_REPLICATION_PASSWORD=standby \
-	BARMAN_DB_SLOT_NAME=barman \
-	BARMAN_DB_BACKUP_METHOD=postgres \
-	BARMAN_EXPORTER_SCHEDULE="*/5 * * * *" \
-	BARMAN_EXPORTER_LISTEN_ADDRESS="0.0.0.0" \
-	BARMAN_EXPORTER_LISTEN_PORT=9780 \
-	BARMAN_EXPORTER_CACHE_TIME=3600
+    BARMAN_VERSION=3.12.1 \
+    BARMAN_CRON_SRC=/private/cron.d \
+    BARMAN_DATA_DIR=/var/lib/barman \
+    BARMAN_LOG_DIR=/var/log/barman \
+    BARMAN_SSH_KEY_DIR=/private/ssh \
+    BARMAN_CRON_SCHEDULE="* * * * *" \
+    BARMAN_BACKUP_SCHEDULE="0 4 * * *" \
+    BARMAN_LOG_LEVEL=INFO \
+    POSTGRES_SERVER=pg \
+    POSTGRES_PORT=5432 \
+    BARMAN_SUPERUSER=postgres \
+    BARMAN_SUPERUSER_PASSWORD=postgres \
+    POSTGRES_DB=postgres \
+    BARMAN_REPLICATION_USER=standby \
+    BARMAN_REPLICATION_PASSWORD=standby \
+    BARMAN_DB_SLOT_NAME=barman \
+    BARMAN_DB_BACKUP_METHOD=postgres \
+    BARMAN_EXPORTER_SCHEDULE="*/5 * * * *" \
+    BARMAN_EXPORTER_LISTEN_ADDRESS="0.0.0.0" \
+    BARMAN_EXPORTER_LISTEN_PORT=9780 \
+    BARMAN_EXPORTER_CACHE_TIME=3600
 VOLUME ${BARMAN_DATA_DIR}
 
 COPY install_barman.sh /tmp/
@@ -88,4 +84,3 @@ ENTRYPOINT ["tini", "--", "/entrypoint.sh"]
 CMD ["cron", "-L", "4",  "-f"]
 COPY entrypoint.sh /
 WORKDIR ${BARMAN_DATA_DIR}
-
